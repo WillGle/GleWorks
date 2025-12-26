@@ -46,6 +46,8 @@
           ];
           
           shellHook = ''
+          # Fix Docker image timestamps (NixOS reproducibility issue)
+          unset SOURCE_DATE_EPOCH
             echo "  GleWork Frontend Development Environment"
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo "  Node.js:    $(node --version)"
