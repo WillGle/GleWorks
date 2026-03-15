@@ -4,13 +4,31 @@
 
 Lộ trình này tận dụng dự án `GleWorks` làm case study thực tế để bạn vừa học vừa xây dựng hệ thống hosting cho chính mình.
 
+## Baseline hiện đang có trong repo
+Hiện tại repo đã có sẵn các phần nền tảng sau:
+
+- `Dockerfile`
+- `docker-compose.yml`
+- `build-docker.sh`
+- `nginx.conf`
+- `Jenkinsfile`
+- `.dockerignore`
+- `flake.nix`
+- `.envrc`
+
+Điều đó có nghĩa là repo đã đi qua mức "frontend local-only" và đang ở mức:
+- build được
+- test được
+- chạy container được
+- có pipeline Jenkins cơ bản
+
 ---
 
 ## 🟢 Giai đoạn 1: Containerizing & K8s Hosting (Tuần 1-2)
 *Mục tiêu: Đưa GleWorks lên chạy trên Cluster K3s.*
 
-1. **Production Dockerfile**: Tối ưu hóa Dockerfile hiện có (sử dụng multi-stage build cho Vite + Nginx).
-2. **K8s Manifests**: Viết file YAML (Deployment & Service) cụ thể cho GleWorks.
+1. **Production Dockerfile**: Rà lại image hiện tại, đặc biệt là phần runtime config qua `config.js`.
+2. **K8s Manifests**: Viết file YAML (Deployment, Service, Ingress) cụ thể cho GleWorks.
 3. **Local Ingress**: Cấu hình để bạn có thể truy cập `gleworks.local` từ trình duyệt máy mình.
 
 ---
@@ -19,7 +37,7 @@ Lộ trình này tận dụng dự án `GleWorks` làm case study thực tế đ
 *Mục tiêu: Quản lý "nhà" cho GleWorks bằng code.*
 
 1. **Project Setup**: Tạo folder `terraform/` trong GleWorks.
-2. **K8s Resources**: Dùng Terraform để tạo Namespace `gleworks-prod` và quản lý các giới hạn tài nguyên (Resource Quotas).
+2. **K8s Resources**: Dùng Terraform để tạo namespace và các resource cơ bản nếu bạn muốn quản lý cluster bằng code.
 
 ---
 
@@ -40,4 +58,7 @@ Lộ trình này tận dụng dự án `GleWorks` làm case study thực tế đ
 ---
 
 ### 🚀 Hãy bắt đầu ngay với bài đầu tiên:
-Bạn có muốn tôi giúp bạn kiểm tra và tối ưu hóa file `Dockerfile` hiện tại của GleWorks để nó "chuẩn chỉnh" cho việc chạy trên Kubernetes không?
+Bạn có thể bắt đầu bằng một trong 2 việc thực tế nhất:
+
+1. kiểm tra lại Docker runtime config để container dùng đúng API URL
+2. tạo bộ `k8s/` manifest đầu tiên cho frontend

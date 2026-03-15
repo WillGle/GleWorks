@@ -1,51 +1,92 @@
 # Implementation Plan - GleWorks DevOps Integration
 
-> Status: this is a proposal/history document, not a source of truth for what currently exists in this repo. Paths and infra files listed below are planned work unless they have been added separately.
+> Status: this file is a proposal/history document. It is not the source of truth for the current repo state.
 
-I will use your `~/dev/GleWorks` project as the central "Lab Case Study". Instead of generic examples, we will implement the DevOps stack directly for this application.
+## Current Repo Baseline
+Before adding more DevOps layers, the repo already contains:
 
-## Proposed Changes
+- `Dockerfile`
+- `.dockerignore`
+- `docker-compose.yml`
+- `build-docker.sh`
+- `docker/entrypoint.sh`
+- `nginx.conf`
+- `Jenkinsfile`
+- `flake.nix` and `.envrc`
+- `public/config.js` and `src/config.ts` for frontend runtime API config
 
-### [GleWorks Project]
+Current CI/CD reality:
+- Jenkins is the active pipeline in the repo.
+- GitHub Actions workflow file is not present anymore.
+- Azure pipeline file is not present anymore.
 
-We will create a specific directory for DevOps manifests within the project.
+## Still Planned, Not Implemented Here
+The items below are still future work unless they are added in a later branch:
 
-#### [NEW] [k8s-manifests](file:///home/will/dev/GleWorks/k8s)
-- Create Deployment, Service, and Ingress manifests for GleWorks.
+- `k8s/` or `k8s-manifests/`
+- `terraform/`
+- Ansible playbooks or vault setup inside this repo
+- Argo CD app definitions
+- NixOS host-level config files outside this repo
 
-#### [NEW] [terraform](file:///home/will/dev/GleWorks/terraform)
-- Define the local environment infrastructure.
+## Proposed Next DevOps Layers
 
-#### [NEW] [kubernetes.nix](file:///etc/nixos/profiles/shared/kubernetes.nix)
-- Enable the K3s service in "server" mode.
-- Add `kubectl`, `kubernetes-helm`, and `k9s` (a great TUI for k8s) to system packages.
-- Configure the `KUBECONFIG` environment variable to point to the K3s config.
+### 1. Kubernetes Manifests
+Goal:
+- run the frontend on a local or remote Kubernetes cluster
 
-#### [NEW] [iac.nix](file:///etc/nixos/profiles/shared/iac.nix)
-- Add `ansible`, `terraform`, and `terraform-ls` to system packages.
+Expected additions:
+- deployment manifest
+- service manifest
+- ingress manifest
 
-#### [MODIFY] [think14gryzen.nix](file:///etc/nixos/hosts/personal/think14gryzen.nix)
-- Import the new `kubernetes.nix` and `iac.nix` profiles.
+Suggested repo location:
+- `k8s/`
 
-### [Shell Configuration]
+### 2. Terraform
+Goal:
+- manage cluster-facing infrastructure or namespaces with code
 
-#### [MODIFY] [base.nix](file:///etc/nixos/home/base.nix)
-- Add a shell alias `k = "kubectl"`.
+Suggested repo location:
+- `terraform/`
 
-## Verification Plan
+Possible first targets:
+- namespace creation
+- resource quotas
+- ingress-related infrastructure
 
-### Automated Tests
-- None applicable for system setup, but I will verify the service manually.
+### 3. Ansible
+Goal:
+- automate host preparation, secrets management, or repeated maintenance tasks
 
-### Manual Verification
-1. **Apply Configuration**: Run `sudo nixos-rebuild switch --flake /etc/nixos#Think14GRyzen`.
-2. **Check Service**: Run `systemctl status k3s` to ensure the cluster is running.
-3. **Check Nodes**: Run `kubectl get nodes` to see the local node in `Ready` state.
-4. **TUI Check**: Run `k9s` to verify the cluster interface.
+Possible future tasks:
+- secret bootstrap
+- backup tasks
+- node preparation
 
-## Learning Path (Mentor Mode)
-Once setup is complete, I will guide you through:
-1. **Pods & Deployments**: Running your first container.
-2. **Services**: Exposing your app.
-3. **ConfigMaps & Secrets**: Managing configuration.
-4. **Namespaces**: Organizing your cluster.
+### 4. GitOps
+Goal:
+- let a cluster reconcile from Git instead of manual deploy commands
+
+Possible future tooling:
+- Argo CD
+
+## Verification Approach for Future Work
+
+### Repo-Level Verification
+- `npm run lint`
+- `npm run type-check`
+- `npm run test:run`
+- `npm run build`
+
+### Infra-Level Verification
+Examples for later phases:
+- `kubectl get pods`
+- `kubectl get svc`
+- `kubectl get ingress`
+- `terraform plan`
+- `ansible-playbook --check`
+
+## Notes
+- Keep `README.md` as the source of truth for what already exists.
+- Keep this file focused on proposed infrastructure work that is not yet part of the implemented repo.
