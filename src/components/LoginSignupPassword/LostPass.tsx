@@ -1,7 +1,8 @@
+// Forgot-password form that triggers the reset flow.
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { DotLottie } from "@lottiefiles/dotlottie-web"; // Import DotLottie
-import { forgotPassword } from "../../api";
+import { forgotPassword } from "@api";
 import "./LoginSignUpLostPassNewPass.css";
 
 const LostPass: React.FC = () => {

@@ -1,14 +1,9 @@
+// Keyboard build flow that gathers configuration before checkout.
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getServiceOptions } from "../../api";
+import { getServiceOptions } from "@api";
+import type { ServiceOption } from "@api/types";
 import "./BuildAndSwitch.css";
-
-// Define the type for the options
-type Option = {
-  optionName: string;
-  price: number;
-  optionGroup: string;
-};
 
 const Build: React.FC = () => {
   const navigate = useNavigate();
@@ -55,30 +50,35 @@ const Build: React.FC = () => {
       try {
         const data = await getServiceOptions(2);
 
-        // Organize the data into the expected structure
         const desolderingOptions = data.options.filter(
-          (option: Option) => option.optionGroup === "Desoldering"
+          (option) => option.optionGroup === "Desoldering"
         );
         const assemblyOptions = data.options.filter(
-          (option: Option) => option.optionGroup === "Assembly"
+          (option) => option.optionGroup === "Assembly"
         );
 
         setPrices({
-          desoldering: desolderingOptions.reduce((acc: any, option: any) => {
-            acc[option.optionName] = option.price;
-            return acc;
-          }, {}),
-          assembly: assemblyOptions.reduce((acc: any, option: any) => {
-            acc[option.optionName] = option.price;
-            return acc;
-          }, {}),
+          desoldering: desolderingOptions.reduce<Record<string, number>>(
+            (acc, option: ServiceOption) => {
+              acc[option.optionName] = option.price;
+              return acc;
+            },
+            {}
+          ),
+          assembly: assemblyOptions.reduce<Record<string, number>>(
+            (acc, option: ServiceOption) => {
+              acc[option.optionName] = option.price;
+              return acc;
+            },
+            {}
+          ),
         });
       } catch (error) {
         console.error("Error fetching prices:", error);
       }
     };
 
-    fetchPrices();
+    void fetchPrices();
   }, []);
 
   // Load data from sessionStorage when the component mounts

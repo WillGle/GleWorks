@@ -9,6 +9,7 @@ pipeline {
     environment {
         IMAGE_NAME = 'glework-frontend'
         IMAGE_TAG = "${env.BUILD_NUMBER}"
+        CANDIDATE_CONTAINER = 'glework-frontend-candidate'
     }
 
     stages {
@@ -28,9 +29,8 @@ pipeline {
 
         stage('Lint') {
             steps {
-                echo '🔍 Running ESLint...'
-                // Allow warnings but continue
-                sh 'npm run lint || echo "Linting warnings found, continuing..."'
+                echo 'Running ESLint...'
+                sh 'npm run lint'
             }
         }
 
@@ -41,7 +41,14 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Test') {
+            steps {
+                echo 'Running test suite...'
+                sh 'npm run test:run'
+            }
+        }
+
+        stage('Build App') {
             steps {
                 echo 'Building React app with Vite...'
                 sh 'npm run build'
@@ -53,14 +60,10 @@ pipeline {
             steps {
                 echo 'Building Docker image...'
                 script {
-                    // Install Docker CLI in Node container
-                    sh 'apk add --no-cache docker-cli'
+                    sh 'apk add --no-cache curl docker-cli'
                     
                     sh """
                         docker build \
-                          --build-arg BUILD_DATE=\$(date -u +%Y-%m-%dT%H:%M:%SZ) \
-                          --build-arg VCS_REF=\${GIT_COMMIT} \
-                          --build-arg VERSION=\${BUILD_NUMBER} \
                           -t ${IMAGE_NAME}:${IMAGE_TAG} \
                           -t ${IMAGE_NAME}:latest \
                           .
@@ -71,40 +74,43 @@ pipeline {
             }
         }
 
-        stage('Test Container') {
+        stage('Verify Candidate Container') {
             steps {
-                echo 'Verifying Docker image...'
+                echo 'Verifying candidate container...'
                 script {
                     sh """
-                        # Verify image was built
-                        docker images ${IMAGE_NAME}:${IMAGE_TAG}
-                        echo "Docker image built successfully!"
+                        docker stop ${CANDIDATE_CONTAINER} 2>/dev/null || true
+                        docker rm ${CANDIDATE_CONTAINER} 2>/dev/null || true
+
+                        docker run -d \
+                          -p 8081:80 \
+                          --name ${CANDIDATE_CONTAINER} \
+                          ${IMAGE_NAME}:${IMAGE_TAG}
+
+                        sleep 5
+                        curl -f http://localhost:8081/
                     """
                 }
             }
         }
-        
 
         stage('Deploy') {
             steps {
                 echo 'Deploying to production...'
                 script {
                     sh """
-                        # Stop and remove old container
                         docker stop ${IMAGE_NAME} 2>/dev/null || true
                         docker rm ${IMAGE_NAME} 2>/dev/null || true
-                        
-                        # Run new container
+
                         docker run -d \
                           -p 8080:80 \
                           --name ${IMAGE_NAME} \
                           --restart unless-stopped \
                           ${IMAGE_NAME}:${IMAGE_TAG}
-                        
-                        # Verify deployment
-                        sleep 3
+
+                        sleep 5
                         docker ps | grep ${IMAGE_NAME}
-                        curl -f http://localhost:8080/ && echo "Deployment successful!"
+                        curl -f http://localhost:8080/
                     """
                 }
             }
@@ -114,6 +120,8 @@ pipeline {
     post {
         always {
             echo 'Cleaning up...'
+            sh 'docker stop ${CANDIDATE_CONTAINER} 2>/dev/null || true'
+            sh 'docker rm ${CANDIDATE_CONTAINER} 2>/dev/null || true'
             sh 'docker image prune -f || true'
         }
         success {

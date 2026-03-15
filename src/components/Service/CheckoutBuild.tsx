@@ -1,13 +1,40 @@
+// Checkout page that converts saved build data into order requests.
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { createOrder, createOrderDetail, getUser } from "../../api";
+import {
+  createOrder,
+  createOrderDetail,
+  getUser,
+  getUserId,
+  isAuthenticated,
+} from "@api";
+import type {
+  CreateOrderDetailPayload,
+  CreateOrderPayload,
+  UserProfile,
+} from "@api/types";
 import "./Checkout.css";
 import qr from "../../assets/qr.webp";
 
+interface BuildCheckoutData {
+  keyboardKitName: string;
+  switchesName: string;
+  layout: string;
+  withSwitches: string;
+  switchQuantity: number;
+  stabilizerName: string;
+  plateChoice: string;
+  providingKeycap: string;
+  desoldering: string;
+  assembly: string;
+  additionalNotes: string;
+  total: number;
+}
+
 const CheckoutBuild: React.FC = () => {
   const navigate = useNavigate();
-  const [userInfo, setUserInfo] = useState<any>(null);
-  const [orderData, setOrderData] = useState<any>(null);
+  const [userInfo, setUserInfo] = useState<UserProfile | null>(null);
+  const [orderData, setOrderData] = useState<BuildCheckoutData | null>(null);
   const [orderDate, setOrderDate] = useState<string>("");
   const [showQRCodePopup, setShowQRCodePopup] = useState<boolean>(false);
   const [phone, setPhone] = useState<string>("");
@@ -17,10 +44,9 @@ const CheckoutBuild: React.FC = () => {
 
   useEffect(() => {
     const fetchUserInfo = async () => {
-      const userId = localStorage.getItem("userId");
-      const token = localStorage.getItem("token");
-      if (!userId || !token) {
-        console.error("No userId or token found in localStorage");
+      const userId = getUserId();
+      if (!isAuthenticated() || !userId) {
+        console.error("No authenticated user found.");
         return;
       }
 
@@ -35,14 +61,14 @@ const CheckoutBuild: React.FC = () => {
       }
     };
 
-    fetchUserInfo();
+    void fetchUserInfo();
 
+    // Checkout resumes from sessionStorage so users can move between pages.
     const savedOrderData = sessionStorage.getItem("buildData");
     if (savedOrderData) {
-      setOrderData(JSON.parse(savedOrderData));
+      setOrderData(JSON.parse(savedOrderData) as BuildCheckoutData);
     }
 
-    // Set order date to current date in DD/MM/YYYY format
     const currentDate = new Date();
     const formattedDate = `${String(currentDate.getDate()).padStart(
       2,
@@ -68,10 +94,14 @@ const CheckoutBuild: React.FC = () => {
     } else if (name === "city") {
       setCity(value);
     } else {
-      setUserInfo((prevUserInfo: any) => ({
-        ...prevUserInfo,
-        [name]: value,
-      }));
+      setUserInfo((prevUserInfo) =>
+        prevUserInfo
+          ? {
+              ...prevUserInfo,
+              [name]: value,
+            }
+          : prevUserInfo
+      );
     }
   };
 
@@ -92,9 +122,9 @@ const CheckoutBuild: React.FC = () => {
       return;
     }
 
-    const orderPayload = {
+    const orderPayload: CreateOrderPayload = {
       userId: userInfo.id,
-      serviceId: 2, // Assuming serviceId for build service
+      serviceId: 2,
       totalCost: orderData.total,
       status: "Pending",
       paymentStatus: "Pending",
@@ -102,14 +132,11 @@ const CheckoutBuild: React.FC = () => {
       telephone: phone,
     };
 
-    // console.log("Order Payload:", orderPayload);
-
     try {
       const createdOrder = await createOrder(orderPayload);
-      //   console.log("Created Order:", createdOrder);
       alert("Order created successfully!");
 
-      const orderDetailPayload = {
+      const orderDetailPayload: CreateOrderDetailPayload = {
         orderId: createdOrder.orderId,
         fieldName: "Keyboard Kit",
         fieldValue: orderData.keyboardKitName,
@@ -122,7 +149,10 @@ const CheckoutBuild: React.FC = () => {
         { fieldName: "With Switches", fieldValue: orderData.withSwitches },
         { fieldName: "Layout", fieldValue: orderData.layout },
         { fieldName: "Stabilizer Name", fieldValue: orderData.stabilizerName },
-        { fieldName: "Switch Quantity", fieldValue: orderData.switchQuantity },
+        {
+          fieldName: "Switch Quantity",
+          fieldValue: String(orderData.switchQuantity),
+        },
         { fieldName: "Plate Choice", fieldValue: orderData.plateChoice },
         { fieldName: "Desoldering", fieldValue: orderData.desoldering },
         {
@@ -137,7 +167,7 @@ const CheckoutBuild: React.FC = () => {
       ];
 
       for (const detail of additionalDetails) {
-        const detailPayload = {
+        const detailPayload: CreateOrderDetailPayload = {
           orderId: createdOrder.orderId,
           fieldName: detail.fieldName,
           fieldValue: detail.fieldValue,
@@ -147,8 +177,6 @@ const CheckoutBuild: React.FC = () => {
       }
 
       sessionStorage.clear();
-
-      // Show QR Code Popup
       setShowQRCodePopup(true);
     } catch (error) {
       console.error("Error saving order:", error);
@@ -165,7 +193,6 @@ const CheckoutBuild: React.FC = () => {
     <div className="checkout-container">
       <h1>Checkout - Keyboard Build Service</h1>
 
-      {/* Editable Customer Information */}
       <div className="customer-info">
         <h3>Customer Information</h3>
         {userInfo ? (
@@ -176,8 +203,7 @@ const CheckoutBuild: React.FC = () => {
                 type="text"
                 name="customer"
                 className="input-field"
-                value={`${userInfo.lastName} ${userInfo.firstName}`}
-                onChange={handleInputChange}
+                value={`${userInfo.lastName} ${userInfo.firstName}`.trim()}
                 readOnly
               />
             </div>
@@ -189,7 +215,6 @@ const CheckoutBuild: React.FC = () => {
                 name="email"
                 className="input-field"
                 value={userInfo.email}
-                onChange={handleInputChange}
                 readOnly
               />
             </div>
@@ -233,7 +258,6 @@ const CheckoutBuild: React.FC = () => {
 
       <hr />
 
-      {/* Non-editable Order Details */}
       <div className="order-details">
         <div className="checkout-form-group">
           <label>Keyboard Kit Name</label>

@@ -1,3 +1,4 @@
+// Public landing page for the main marketing experience.
 import React from "react";
 import "./Landing.css";
 

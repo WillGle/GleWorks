@@ -1,6 +1,12 @@
+// Admin order detail view with status editing.
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getOrderDetails, updateOrderStatus } from "../../api";
+
+import { getOrderDetails, updateOrderStatus } from "@api";
+import type {
+  OrderDetailsResponse,
+  UpdateOrderStatusPayload,
+} from "@api/types";
 import "./AdminOrderDetail.css";
 
 const paymentStatusOptions = ["Paid", "Pending", "Canceled"];
@@ -12,120 +18,104 @@ const orderStatusOptions = [
   "Canceled",
 ];
 
-const isOrderArray = (data: unknown): data is any[] => Array.isArray(data);
+const emptyOrderDetails: OrderDetailsResponse = {
+  orderId: "",
+  status: "",
+  paymentStatus: "",
+  totalCost: 0,
+  createdAt: "",
+  address: "",
+  telephone: "",
+  user: null,
+  fields: [],
+};
 
 const OrderDetail: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
-  const [orderData, setOrderData] = useState<any[] | null>(null);
+  const [orderData, setOrderData] = useState<OrderDetailsResponse | null>(null);
 
-  // Fetch order details from API
   useEffect(() => {
     const fetchOrderDetails = async () => {
       if (!orderId) {
-        setOrderData([]);
-        return; // Ngừng thực hiện nếu orderId không hợp lệ
+        setOrderData(emptyOrderDetails);
+        return;
       }
+
       try {
         const data = await getOrderDetails(orderId);
-        // console.log("Fetched Order Data:", data);
-        if (!isOrderArray(data)) {
-          setOrderData([]);
-          return;
-        }
         setOrderData(data);
-        // Lưu dữ liệu vào sessionStorage
+        // Reuse the last fetched payload during refreshes on the same order page.
         sessionStorage.setItem(`order_${orderId}`, JSON.stringify(data));
       } catch (error) {
         console.error("Error fetching order details:", error);
+        setOrderData(emptyOrderDetails);
       }
     };
 
     if (!orderId) {
-      setOrderData([]);
+      setOrderData(emptyOrderDetails);
       return;
     }
 
-    // Kiểm tra sessionStorage để lấy dữ liệu đã lưu
     const savedOrderData = sessionStorage.getItem(`order_${orderId}`);
     if (savedOrderData) {
       try {
-        const parsed = JSON.parse(savedOrderData);
-        if (isOrderArray(parsed)) {
-          setOrderData(parsed);
-          return;
-        }
+        const parsed = JSON.parse(savedOrderData) as OrderDetailsResponse;
+        setOrderData(parsed);
+        return;
       } catch (error) {
         console.error("Error parsing saved order data:", error);
       }
     }
-    fetchOrderDetails();
+
+    void fetchOrderDetails();
   }, [orderId]);
 
-  // Handlers for updating the dropdown values
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
 
     setOrderData((prev) => {
-      if (!Array.isArray(prev) || prev.length === 0) {
+      if (!prev) {
         return prev;
       }
-      const updatedOrderData = prev.map((item: any, index: number) => {
-        if (index === 0) {
-          return {
-            ...item,
-            Order: {
-              ...item.Order,
-              [name]: value, // Cập nhật trường status hoặc paymentStatus
-            },
-          };
-        }
-        return item; // Giữ nguyên các phần tử khác
-      });
 
-      // Lưu vào sessionStorage
+      const updatedOrderData =
+        name === "status"
+          ? { ...prev, status: value }
+          : { ...prev, paymentStatus: value };
+
       if (orderId) {
         sessionStorage.setItem(
           `order_${orderId}`,
           JSON.stringify(updatedOrderData)
         );
       }
+
       return updatedOrderData;
     });
   };
 
   const handleSubmit = async () => {
-    if (!orderId) {
-      return;
-    }
-    if (!Array.isArray(orderData) || orderData.length === 0) {
-      return;
-    }
-    const order = orderData[0]?.Order;
-    if (!order) {
+    if (!orderId || !orderData?.orderId) {
       return;
     }
 
     try {
-      const updatedOrder = await updateOrderStatus(orderId, {
-        status: order.status,
-        paymentStatus: order.paymentStatus,
-      });
-      //   console.log("Updated Order:", updatedOrder);
-      // Cập nhật lại orderData với dữ liệu mới
-      setOrderData((prev: any) => {
-        const newOrderData = [...prev];
-        newOrderData[0] = {
-          ...newOrderData[0],
-          Order: {
-            ...newOrderData[0].Order,
-            status: updatedOrder.status, // Cập nhật trạng thái
-            paymentStatus: updatedOrder.paymentStatus, // Cập nhật trạng thái thanh toán
-          },
-        };
-        return newOrderData;
-      });
+      const payload: UpdateOrderStatusPayload = {
+        status: orderData.status,
+        paymentStatus: orderData.paymentStatus,
+      };
 
-      // Xóa dữ liệu trong sessionStorage
+      const updatedOrder = await updateOrderStatus(orderId, payload);
+      setOrderData((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: updatedOrder.status,
+              paymentStatus: updatedOrder.paymentStatus,
+            }
+          : prev
+      );
       sessionStorage.removeItem(`order_${orderId}`);
     } catch (error) {
       console.error("Error updating order status:", error);
@@ -135,23 +125,21 @@ const OrderDetail: React.FC = () => {
   if (!orderData) {
     return <div>Loading...</div>;
   }
-  if (orderData.length === 0) {
+
+  if (!orderData.orderId) {
     return <div>No order details found.</div>;
   }
 
-  //   console.log("Current Order Data:", orderData);
-
   return (
     <div className="order-detail-container">
-      {/* Status Selection */}
       <div className="status-section">
         <h1>My Orders - Detail</h1>
         <div className="admin-status-selection">
           <div className="status-form-group">
             <label>Order Status</label>
             <select
-              name="status" // Đặt tên cho trường status
-              value={orderData[0].Order?.status || ""}
+              name="status"
+              value={orderData.status}
               onChange={handleStatusChange}
             >
               {orderStatusOptions.map((status) => (
@@ -164,8 +152,8 @@ const OrderDetail: React.FC = () => {
           <div className="status-form-group">
             <label>Payment Status</label>
             <select
-              name="paymentStatus" // Đặt tên cho trường paymentStatus
-              value={orderData[0]?.Order?.paymentStatus || ""}
+              name="paymentStatus"
+              value={orderData.paymentStatus}
               onChange={handleStatusChange}
             >
               {paymentStatusOptions.map((status) => (
@@ -183,35 +171,34 @@ const OrderDetail: React.FC = () => {
         </div>
       </div>
 
-      {/* Customer Information */}
       <div className="customer-info">
         <div className="order-form-group">
           <label>Order ID</label>
-          <p>{orderData[0]?.orderId || "N/A"}</p>
+          <p>{orderData.orderId || "N/A"}</p>
         </div>
         <div className="order-form-group">
           <label>Customer</label>
-          <p>{`${orderData[0]?.Order?.User?.firstName || "N/A"} ${
-            orderData[0]?.Order?.User?.lastName || "N/A"
+          <p>{`${orderData.user?.firstName || "N/A"} ${
+            orderData.user?.lastName || "N/A"
           }`}</p>
         </div>
         <div className="order-form-group">
           <label>Mail</label>
-          <p>{orderData[0]?.Order?.User?.email || "N/A"}</p>
+          <p>{orderData.user?.email || "N/A"}</p>
         </div>
         <div className="order-form-group">
           <label>Tel</label>
-          <p>{orderData[0]?.Order?.telephone || "N/A"}</p>
+          <p>{orderData.telephone || "N/A"}</p>
         </div>
         <div className="order-form-group">
           <label>Address</label>
-          <p>{orderData[0]?.Order?.address || "N/A"}</p>
+          <p>{orderData.address || "N/A"}</p>
         </div>
         <div className="order-form-group">
           <label>Order Date</label>
           <p>
-            {orderData[0]?.Order?.createdAt
-              ? new Date(orderData[0].Order.createdAt).toLocaleDateString()
+            {orderData.createdAt
+              ? new Date(orderData.createdAt).toLocaleDateString()
               : "N/A"}
           </p>
         </div>
@@ -219,25 +206,20 @@ const OrderDetail: React.FC = () => {
 
       <hr />
 
-      {/* Order Information */}
       <div className="order-info">
-        {Array.isArray(orderData) &&
-          orderData.map(
-            (field: { id: string; fieldName: string; fieldValue: string }) => (
-              <div className="order-form-group" key={field.id}>
-                <label>{field.fieldName}</label>
-                <p>{field.fieldValue || "N/A"}</p>
-              </div>
-            )
-          )}
+        {orderData.fields.map((field) => (
+          <div className="order-form-group" key={field.id}>
+            <label>{field.fieldName}</label>
+            <p>{field.fieldValue || "N/A"}</p>
+          </div>
+        ))}
       </div>
 
-      {/* Total Section */}
       <div className="admin-order-total-section">
         <h2>Total</h2>
         <p>
-          {orderData[0]?.Order?.totalCost
-            ? `${orderData[0].Order.totalCost.toLocaleString()} VND`
+          {orderData.totalCost
+            ? `${orderData.totalCost.toLocaleString()} VND`
             : "N/A"}
         </p>
       </div>

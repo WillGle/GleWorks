@@ -1,10 +1,11 @@
+// Signup form for creating a new user account.
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { register } from "../../api";
+import { register } from "@api";
 import "./LoginSignUpLostPassNewPass.css";
 import { DotLottie } from "@lottiefiles/dotlottie-web"; // Import DotLottie
 

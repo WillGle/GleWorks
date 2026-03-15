@@ -1,3 +1,4 @@
+// Gallery-style archive page for completed work.
 import React from "react";
 import "./Archive.css";
 import image1 from "../../assets/a3.webp";

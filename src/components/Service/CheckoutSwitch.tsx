@@ -1,13 +1,34 @@
+// Checkout page that converts saved switch data into order requests.
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { createOrder, createOrderDetail, getUser } from "../../api";
+import {
+  createOrder,
+  createOrderDetail,
+  getUser,
+  getUserId,
+  isAuthenticated,
+} from "@api";
+import type {
+  CreateOrderDetailPayload,
+  CreateOrderPayload,
+  UserProfile,
+} from "@api/types";
 import "./Checkout.css";
 import qr from "../../assets/qr.webp";
 
+interface SwitchCheckoutData {
+  switchName: string;
+  amount: number;
+  moddingPreferences: Record<string, boolean>;
+  springPreference: string;
+  additionalNotes: string;
+  total: number;
+}
+
 const Checkout: React.FC = () => {
   const navigate = useNavigate();
-  const [userInfo, setUserInfo] = useState<any>(null);
-  const [orderData, setOrderData] = useState<any>(null);
+  const [userInfo, setUserInfo] = useState<UserProfile | null>(null);
+  const [orderData, setOrderData] = useState<SwitchCheckoutData | null>(null);
   const [orderDate, setOrderDate] = useState<string>("");
   const [phone, setPhone] = useState<string>("");
   const [address, setAddress] = useState<string>("");
@@ -17,10 +38,9 @@ const Checkout: React.FC = () => {
 
   useEffect(() => {
     const fetchUserInfo = async () => {
-      const userId = localStorage.getItem("userId");
-      const token = localStorage.getItem("token");
-      if (!userId || !token) {
-        console.error("No userId or token found in localStorage");
+      const userId = getUserId();
+      if (!isAuthenticated() || !userId) {
+        console.error("No authenticated user found.");
         return;
       }
 
@@ -35,11 +55,12 @@ const Checkout: React.FC = () => {
       }
     };
 
-    fetchUserInfo();
+    void fetchUserInfo();
 
+    // Checkout resumes from sessionStorage so users can move between pages.
     const savedOrderData = sessionStorage.getItem("switchModdingData");
     if (savedOrderData) {
-      setOrderData(JSON.parse(savedOrderData));
+      setOrderData(JSON.parse(savedOrderData) as SwitchCheckoutData);
     }
 
     const currentDate = new Date();
@@ -67,10 +88,14 @@ const Checkout: React.FC = () => {
     } else if (name === "city") {
       setCity(value);
     } else {
-      setUserInfo((prevUserInfo: any) => ({
-        ...prevUserInfo,
-        [name]: value,
-      }));
+      setUserInfo((prevUserInfo) =>
+        prevUserInfo
+          ? {
+              ...prevUserInfo,
+              [name]: value,
+            }
+          : prevUserInfo
+      );
     }
   };
 
@@ -80,7 +105,6 @@ const Checkout: React.FC = () => {
     const value = event.target.value;
     setFullAddress(value);
 
-    // Tách giá trị thành address và city
     const [newAddress, newCity] = value.split(",").map((part) => part.trim());
     setAddress(newAddress || "");
     setCity(newCity || "");
@@ -92,7 +116,7 @@ const Checkout: React.FC = () => {
       return;
     }
 
-    const orderPayload = {
+    const orderPayload: CreateOrderPayload = {
       userId: userInfo.id,
       serviceId: 1,
       totalCost: orderData.total,
@@ -102,14 +126,11 @@ const Checkout: React.FC = () => {
       telephone: phone,
     };
 
-    // console.log("Order Payload:", orderPayload);
-
     try {
       const createdOrder = await createOrder(orderPayload);
-      //   console.log("Created Order:", createdOrder);
       alert("Order created successfully!");
 
-      const orderDetailPayload = {
+      const orderDetailPayload: CreateOrderDetailPayload = {
         orderId: createdOrder.orderId,
         fieldName: "Switches",
         fieldValue: orderData.switchName,
@@ -141,7 +162,7 @@ const Checkout: React.FC = () => {
       ];
 
       for (const detail of additionalDetails) {
-        const detailPayload = {
+        const detailPayload: CreateOrderDetailPayload = {
           orderId: createdOrder.orderId,
           fieldName: detail.fieldName,
           fieldValue: detail.fieldValue,
@@ -151,8 +172,6 @@ const Checkout: React.FC = () => {
       }
 
       sessionStorage.clear();
-
-      //   navigate("/service/switch-modding");
 
       setShowQRCodePopup(true);
     } catch (error) {
@@ -170,7 +189,6 @@ const Checkout: React.FC = () => {
     <div className="checkout-container">
       <h1>Checkout - Switch Modding</h1>
 
-      {/* Editable Customer Information */}
       <div className="customer-info">
         <h3>Customer Information</h3>
         {userInfo ? (
@@ -181,8 +199,7 @@ const Checkout: React.FC = () => {
                 type="text"
                 name="customer"
                 className="input-field"
-                value={`${userInfo.lastName} ${userInfo.firstName} `}
-                onChange={handleInputChange}
+                value={`${userInfo.lastName} ${userInfo.firstName}`.trim()}
                 readOnly
               />
             </div>
@@ -194,7 +211,6 @@ const Checkout: React.FC = () => {
                 name="email"
                 className="input-field"
                 value={userInfo.email}
-                onChange={handleInputChange}
                 readOnly
               />
             </div>

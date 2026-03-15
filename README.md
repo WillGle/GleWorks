@@ -16,7 +16,7 @@ React + TypeScript + Vite frontend for the Gleammy Workshop service booking and 
 - Nginx (production image)
 
 ## Project Structure
-- `src/api`: API client and domain modules
+- `src/api`: API client, domain modules, session helper, mappers, and shared types
 - `src/components`: UI pages and components
 - `src/assets`: images (webp)
 - `public/config.js`: runtime config loaded in the browser
@@ -26,6 +26,9 @@ React + TypeScript + Vite frontend for the Gleammy Workshop service booking and 
 This app reads the API base URL at runtime when available:
 - `window.__APP_CONFIG__.API_URL` from `/config.js`
 - fallback: `import.meta.env.VITE_API_URL`
+
+Auth/session storage is managed through the API session helper in `src/api/session.ts`.
+Components should not read or write auth keys directly.
 
 Local development:
 - `.envrc` sets `VITE_API_URL` (direnv)
@@ -47,6 +50,7 @@ npm run preview
 ```bash
 npm run lint
 npm run test
+npm run test:run
 ```
 
 ## Docker
@@ -62,6 +66,12 @@ docker compose up --build
 ```
 
 Frontend: `http://localhost:8080`
+
+## CI/CD
+- Jenkins is the official pipeline.
+- Pipeline order: lint, type-check, test, build, image build, candidate check, deploy.
+- `docker-compose.yml` is for simple local container runs.
+- `build-docker.sh` is for manual image builds.
 
 ## Backend Expectations
 The frontend expects an API with endpoints like:
@@ -86,4 +96,15 @@ Core responsibilities:
 - Orders: create orders, list user orders, admin order updates, order details
 
 ## API Usage
-Use helpers in `src/api/*` from components. Avoid inline fetch/axios in components.
+Use helpers in `src/api/*` from components.
+
+Rules:
+- Components import API helpers from `src/api`.
+- Components must not call `axios` or `fetch` directly.
+- Components must not read or write auth storage directly.
+- Backend response normalization happens in `src/api`, not in UI code.
+- Global API handling for `401` and `500` responses is triggered from the shared API client and shown through a single toast in the app shell.
+
+## Planning Docs
+- `README.md` describes the current implemented repo state.
+- `devops/LEARNING_PLAN.md` and `devops/IMPLEMENTATION_PLAN.md` are planning documents, not current implementation truth.

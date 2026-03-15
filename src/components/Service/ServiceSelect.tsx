@@ -1,12 +1,14 @@
+// Entry page for choosing the service flow before checkout.
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { listServices } from "../../api";
+import { listServices } from "@api";
+import type { ServiceSummary } from "@api/types";
 import "./ServiceSelect.css";
 
 const Service: React.FC = () => {
   const navigate = useNavigate();
   const [activeNote, setActiveNote] = useState<number | null>(null);
-  const [services, setServices] = useState<any[]>([]);
+  const [services, setServices] = useState<ServiceSummary[]>([]);
 
   // Fetch services from the API
   useEffect(() => {
@@ -19,7 +21,7 @@ const Service: React.FC = () => {
       }
     };
 
-    fetchServices();
+    void fetchServices();
   }, []);
 
   // FAQ data
