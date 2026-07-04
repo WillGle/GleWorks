@@ -7,20 +7,18 @@ const PrivacyPolicy: React.FC = () => {
       <h1>Privacy Policy</h1>
       <p>
         Your privacy matters to us. This policy explains what information we
-        collect and how we use it when you visit GLEWORKS or place an order.
+        collect and how we use it when you visit GLEWORKS.
       </p>
       <h3>Information We Collect</h3>
       <p>
-        We collect the information you give us when you create an account or
-        place an order, such as your name, email address, phone number, and
-        shipping details. We also collect basic usage data that helps us keep
-        the website running smoothly.
+        We collect basic usage data that helps us keep the website running
+        smoothly. If you contact us directly, we only use the information you
+        provide to respond to that message.
       </p>
       <h3>How We Use Your Information</h3>
       <p>
-        We use your information to process orders, provide customer support, and
-        keep you updated about your purchases. We do not sell your personal
-        information to third parties.
+        We use site data to maintain the portfolio and understand general usage.
+        We do not sell your personal information to third parties.
       </p>
       <h3>Contact</h3>
       <p>

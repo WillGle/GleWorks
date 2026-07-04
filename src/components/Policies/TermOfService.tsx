@@ -7,9 +7,8 @@ const TermOfService: React.FC = () => {
       <h1>Term of Service</h1>
       <p>
         Please read these terms carefully before using this website. By
-        accessing this site or placing an order with GLEWORKS, you confirm your
-        acceptance of the terms below. If you do not agree with them, please do
-        not use this website.
+        accessing this site, you confirm your acceptance of the terms below. If
+        you do not agree with them, please do not use this website.
       </p>
       <h3>General</h3>
       <p>
@@ -25,13 +24,11 @@ const TermOfService: React.FC = () => {
         personal, non-commercial use. You may not copy, reproduce, or
         redistribute any part of the site without our written permission.
       </p>
-      <h3>Products &amp; Services</h3>
+      <h3>Commissions</h3>
       <p>
-        We provide custom keyboard building and switch modding services. We aim
-        to describe every service and product as accurately as possible, but we
-        do not guarantee that all details are error-free. Prices and
-        availability may change without notice, and we reserve the right to
-        refuse or cancel any order at our discretion.
+        Keyboard commissions are currently paused. This site is now a portfolio
+        and project journal, and it does not accept service requests or checkout
+        submissions.
       </p>
     </section>
   );

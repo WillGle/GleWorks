@@ -2,9 +2,7 @@
 # Provision a fresh Ubuntu/Debian VPS and bring up the GleWorks stack.
 #
 #   ansible-playbook -i inventory.ini playbook.yml \
-#     -e domain=demo.example.com \
-#     -e jwt_secret="$(openssl rand -hex 32)" \
-#     -e grafana_admin_password='a-strong-password'
+#     -e domain=demo.example.com
 #
 # Uses only ansible.builtin modules — no extra collections required.
 - name: Deploy GleWorks
@@ -14,7 +12,6 @@
     repo_url: "https://github.com/WillGle/GleWorks.git"
     repo_branch: "main"
     app_dir: "/opt/gleworks"
-    grafana_anon_enabled: "false"
   tasks:
     - name: Install base packages
       ansible.builtin.apt:
@@ -46,11 +43,7 @@
         mode: "0600"
         content: |
           DOMAIN={{ domain }}
-          JWT_SECRET={{ jwt_secret }}
-          GRAFANA_ADMIN_PASSWORD={{ grafana_admin_password | default('') }}
-          GRAFANA_ANON_ENABLED={{ grafana_anon_enabled | default('false') }}
           FRONTEND_IMAGE={{ frontend_image | default('glework-frontend') }}
-          BACKEND_IMAGE={{ backend_image | default('glework-backend') }}
           TAG={{ tag | default('latest') }}
 
     - name: Pull images from registry

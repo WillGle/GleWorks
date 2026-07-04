@@ -1,7 +1,6 @@
-# Fallback (DR) topology for the VPS when primary physical nodes are down.
-# Excludes heavy monitoring (Prometheus/Grafana) to run comfortably within 2 GB RAM.
+# Lightweight static portfolio topology for the VPS.
 #
-#   internet --443--> caddy (auto-TLS) --> frontend (nginx: SPA + /api proxy) --> backend
+#   internet --443--> caddy (auto-TLS) --> frontend (nginx: static SPA)
 #
 # Run from the repo root:
 #   docker compose -f deploy/docker-compose.fallback.yml --env-file deploy/.env up -d --build
@@ -9,33 +8,9 @@
 # Or run from deploy/ directory using Makefile targets by setting COMPOSE file.
 
 services:
-  backend:
-    build: ../simpleBEDB
-    image: ${BACKEND_IMAGE:-glework-backend:${TAG:-latest}}
-    environment:
-      - PORT=3001
-      - JWT_SECRET=${JWT_SECRET:?set JWT_SECRET in deploy/.env}
-      # If using PostgreSQL migration later, configure connection details here:
-      # - PGHOST=db
-      # - PGUSER=${PGUSER}
-      # - PGPASSWORD=${PGPASSWORD}
-      # - PGDATABASE=${PGDATABASE}
-      # - PGPORT=5432
-    volumes:
-      - backend-data:/app/data
-    expose:
-      - "3001"
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 250M
-
   frontend:
     build: ..
     image: ${FRONTEND_IMAGE:-glework-frontend:${TAG:-latest}}
-    depends_on:
-      - backend
     expose:
       - "80"
     restart: unless-stopped
@@ -64,6 +39,5 @@ services:
           memory: 100M
 
 volumes:
-  backend-data:
   caddy-data:
   caddy-config:

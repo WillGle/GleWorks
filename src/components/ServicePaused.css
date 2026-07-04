@@ -1,0 +1,39 @@
+.service-paused {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 80px 20px;
+  font-family: Arial, sans-serif;
+}
+
+.service-paused-content {
+  max-width: 680px;
+}
+
+.service-paused h1 {
+  margin: 0 0 20px;
+  font-size: 40px;
+  color: #1d1d1f;
+}
+
+.service-paused p {
+  font-size: 18px;
+  line-height: 1.6;
+  color: #505050;
+}
+
+.service-paused-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+.service-paused-links a {
+  color: #174aa8;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.service-paused-links a:hover {
+  text-decoration: underline;
+}

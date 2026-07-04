@@ -33,3 +33,6 @@ node_modules
 #local doc
 doc/CV/
 doc/learning/
+
+# personal practice notes (never publish)
+/vng-prep/
