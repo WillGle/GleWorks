@@ -21,18 +21,3 @@ node_modules
 
 # TypeScript build cache
 *.tsbuildinfo
-
-# LaTeX auxiliary/build files
-*.aux
-*.fdb_latexmk
-*.fls
-*.synctex.gz
-*.toc
-*.out
-*.log
-#local doc
-doc/CV/
-doc/learning/
-
-# personal practice notes (never publish)
-/vng-prep/
