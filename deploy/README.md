@@ -21,10 +21,10 @@ portfolio stack. The previous full-stack app lives in `gleworks-full`.
 
 ```bash
 git clone https://github.com/WillGle/GleWorks.git
-cd GleWorks/deploy
-cp .env.example .env
-$EDITOR .env
-docker compose -f docker-compose.fallback.yml --env-file .env up -d --build
+cd GleWorks
+cp deploy/.env.example deploy/.env
+$EDITOR deploy/.env
+docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
 ```
 
 Visit `https://$DOMAIN`.
@@ -33,7 +33,7 @@ Visit `https://$DOMAIN`.
 
 ```bash
 curl -fsS https://$DOMAIN/
-docker compose -f docker-compose.fallback.yml --env-file .env ps
+docker compose -f deploy/docker-compose.yml --env-file deploy/.env ps
 ```
 
 ## Validate Config
@@ -41,5 +41,9 @@ docker compose -f docker-compose.fallback.yml --env-file .env ps
 ```bash
 cd deploy
 make validate
-docker compose -f docker-compose.fallback.yml --env-file .env config
+docker compose -f docker-compose.yml --env-file .env config
 ```
+
+## Jenkins
+
+Configure the Jenkins pipeline script path as `deploy/Jenkinsfile`.

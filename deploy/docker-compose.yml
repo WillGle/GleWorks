@@ -1,12 +1,7 @@
-# Lightweight static portfolio topology for the VPS.
-#
-#   internet --443--> caddy (auto-TLS) --> frontend (nginx: static SPA)
+# Default deploy stack for the static portfolio.
 #
 # Run from the repo root:
-#   docker compose -f deploy/docker-compose.fallback.yml --env-file deploy/.env up -d --build
-#
-# Or run from deploy/ directory using Makefile targets by setting COMPOSE file.
-
+#   docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
 services:
   frontend:
     build:
@@ -16,10 +11,6 @@ services:
     expose:
       - "80"
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 100M
 
   caddy:
     image: caddy:2-alpine
@@ -35,10 +26,6 @@ services:
     depends_on:
       - frontend
     restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 100M
 
 volumes:
   caddy-data:

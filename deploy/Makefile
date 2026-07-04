@@ -15,7 +15,7 @@ up: ## Build images and start the stack
 	$(COMPOSE) up -d --build
 
 build-push: ## Build registry images (amd64) and push — run on a dev box, NOT the 2GB VPS
-	docker build --platform $(PLATFORM) -t $(FRONTEND_IMAGE) -f ../Dockerfile ..
+	docker build --platform $(PLATFORM) -t $(FRONTEND_IMAGE) -f Dockerfile ..
 	docker push $(FRONTEND_IMAGE)
 	@echo ""
 	@echo "Pushed. On the VPS put these in deploy/.env, then: make deploy COMPOSE_FILE=docker-compose.fallback.yml"
