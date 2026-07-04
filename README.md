@@ -48,27 +48,6 @@ npm run build
 - `src/assets`
   Image assets used by the public site.
 
-## Docker
-
-Build and run the static site:
-
-```bash
-docker build -t glework-frontend:latest .
-docker run -p 8080:80 glework-frontend:latest
-```
-
-Or with Compose:
-
-```bash
-docker compose up --build
-```
-
-Then open:
-
-```text
-http://localhost:8080
-```
-
 ## Deploy
 
 The deploy stack is static-only:
@@ -77,4 +56,11 @@ The deploy stack is static-only:
 internet -> Caddy -> frontend nginx container
 ```
 
-Use the files under `deploy/` for VPS deployment with automatic HTTPS.
+All Docker, Compose, Jenkins, and Ansible files live under [`deploy/`](deploy/README.md).
+Run everything from the repo root, e.g.:
+
+```bash
+docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
+```
+
+See `deploy/README.md` for the full setup and verification steps.

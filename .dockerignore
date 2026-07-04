@@ -7,7 +7,4 @@ dist
 .env.*
 coverage
 *.log
-devops
 README.md
-azure-pipelines.yml
-build-docker.sh
