@@ -1,0 +1,46 @@
+services:
+  backend:
+    build: ./simpleBEDB
+    image: glework-backend:${TAG:-latest}
+    environment:
+      - PORT=3001
+    ports:
+      - "127.0.0.1:3001:3001" # localhost-only: /metrics + direct API checks
+    volumes:
+      - ./simpleBEDB/data:/app/data
+    restart: unless-stopped
+
+  frontend:
+    build: .
+    image: glework-frontend:${TAG:-latest}
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./monitor/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitor/prometheus/rules:/etc/prometheus/rules:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./monitor/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitor/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped

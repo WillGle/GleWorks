@@ -1,0 +1,367 @@
+// Checkout page that converts saved build data into order requests.
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  createOrder,
+  createOrderDetail,
+  getUser,
+  getUserId,
+  isAuthenticated,
+} from "@api";
+import type {
+  CreateOrderDetailPayload,
+  CreateOrderPayload,
+  UserProfile,
+} from "@api/types";
+import "./Checkout.css";
+import qr from "../../assets/qr.webp";
+
+interface BuildCheckoutData {
+  keyboardKitName: string;
+  switchesName: string;
+  layout: string;
+  withSwitches: string;
+  switchQuantity: number;
+  stabilizerName: string;
+  plateChoice: string;
+  providingKeycap: string;
+  desoldering: string;
+  assembly: string;
+  additionalNotes: string;
+  total: number;
+}
+
+const CheckoutBuild: React.FC = () => {
+  const navigate = useNavigate();
+  const [userInfo, setUserInfo] = useState<UserProfile | null>(null);
+  const [orderData, setOrderData] = useState<BuildCheckoutData | null>(null);
+  const [orderDate, setOrderDate] = useState<string>("");
+  const [showQRCodePopup, setShowQRCodePopup] = useState<boolean>(false);
+  const [phone, setPhone] = useState<string>("");
+  const [address, setAddress] = useState<string>("");
+  const [city, setCity] = useState<string>("");
+  const [fullAddress, setFullAddress] = useState<string>("");
+
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      const userId = getUserId();
+      if (!isAuthenticated() || !userId) {
+        console.error("No authenticated user found.");
+        return;
+      }
+
+      try {
+        const data = await getUser(userId);
+        setUserInfo(data);
+        setPhone(data.phoneNumber || "");
+        setAddress(data.address || "");
+        setCity(data.city || "");
+      } catch (error) {
+        console.error("Error fetching user info:", error);
+      }
+    };
+
+    void fetchUserInfo();
+
+    // Checkout resumes from sessionStorage so users can move between pages.
+    const savedOrderData = sessionStorage.getItem("buildData");
+    if (savedOrderData) {
+      setOrderData(JSON.parse(savedOrderData) as BuildCheckoutData);
+    }
+
+    const currentDate = new Date();
+    const formattedDate = `${String(currentDate.getDate()).padStart(
+      2,
+      "0"
+    )}/${String(currentDate.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}/${currentDate.getFullYear()}`;
+    setOrderDate(formattedDate);
+  }, []);
+
+  useEffect(() => {
+    const combinedAddress = `${address}${city ? `, ${city}` : ""}`;
+    setFullAddress(combinedAddress);
+  }, [address, city]);
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    if (name === "phone") {
+      setPhone(value);
+    } else if (name === "address") {
+      setAddress(value);
+    } else if (name === "city") {
+      setCity(value);
+    } else {
+      setUserInfo((prevUserInfo) =>
+        prevUserInfo
+          ? {
+              ...prevUserInfo,
+              [name]: value,
+            }
+          : prevUserInfo
+      );
+    }
+  };
+
+  const handleFullAddressChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = event.target.value;
+    setFullAddress(value);
+
+    const [newAddress, newCity] = value.split(",").map((part) => part.trim());
+    setAddress(newAddress || "");
+    setCity(newCity || "");
+  };
+
+  const handleProceed = async () => {
+    if (!orderData || !userInfo) {
+      alert("Order data or user information is missing.");
+      return;
+    }
+
+    const orderPayload: CreateOrderPayload = {
+      userId: userInfo.id,
+      serviceId: 2,
+      totalCost: orderData.total,
+      status: "Pending",
+      paymentStatus: "Pending",
+      address: `${address}${city ? `, ${city}` : ""}`,
+      telephone: phone,
+    };
+
+    try {
+      const createdOrder = await createOrder(orderPayload);
+      alert("Order created successfully!");
+
+      const orderDetailPayload: CreateOrderDetailPayload = {
+        orderId: createdOrder.orderId,
+        fieldName: "Keyboard Kit",
+        fieldValue: orderData.keyboardKitName,
+      };
+
+      await createOrderDetail(orderDetailPayload);
+
+      const additionalDetails = [
+        { fieldName: "Switches", fieldValue: orderData.switchesName },
+        { fieldName: "With Switches", fieldValue: orderData.withSwitches },
+        { fieldName: "Layout", fieldValue: orderData.layout },
+        { fieldName: "Stabilizer Name", fieldValue: orderData.stabilizerName },
+        {
+          fieldName: "Switch Quantity",
+          fieldValue: String(orderData.switchQuantity),
+        },
+        { fieldName: "Plate Choice", fieldValue: orderData.plateChoice },
+        { fieldName: "Desoldering", fieldValue: orderData.desoldering },
+        {
+          fieldName: "Are You Providing Keycap?",
+          fieldValue: orderData.providingKeycap,
+        },
+        { fieldName: "Assembly", fieldValue: orderData.assembly },
+        {
+          fieldName: "Additional Notes",
+          fieldValue: orderData.additionalNotes,
+        },
+      ];
+
+      for (const detail of additionalDetails) {
+        const detailPayload: CreateOrderDetailPayload = {
+          orderId: createdOrder.orderId,
+          fieldName: detail.fieldName,
+          fieldValue: detail.fieldValue,
+        };
+
+        await createOrderDetail(detailPayload);
+      }
+
+      sessionStorage.clear();
+      setShowQRCodePopup(true);
+    } catch (error) {
+      console.error("Error saving order:", error);
+      alert("Failed to save order. Please try again.");
+    }
+  };
+
+  const handleCloseQRCodePopup = () => {
+    alert("Your payment will be processed later.");
+    navigate("/user/my-orders");
+  };
+
+  return (
+    <div className="checkout-container">
+      <h1>Checkout - Keyboard Build Service</h1>
+
+      <div className="customer-info">
+        <h3>Customer Information</h3>
+        {userInfo ? (
+          <>
+            <div className="checkout-form-group">
+              <label>Customer</label>
+              <input
+                type="text"
+                name="customer"
+                className="input-field"
+                value={`${userInfo.lastName} ${userInfo.firstName}`.trim()}
+                readOnly
+              />
+            </div>
+
+            <div className="checkout-form-group">
+              <label>Email</label>
+              <input
+                type="email"
+                name="email"
+                className="input-field"
+                value={userInfo.email}
+                readOnly
+              />
+            </div>
+
+            <div className="checkout-form-group">
+              <label>Phone</label>
+              <input
+                type="tel"
+                name="phone"
+                className="input-field"
+                value={phone}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            <div className="checkout-form-group">
+              <label>Address</label>
+              <input
+                type="text"
+                name="fullAddress"
+                className="input-field"
+                value={fullAddress}
+                onChange={handleFullAddressChange}
+              />
+            </div>
+            <div className="checkout-form-group">
+              <label>Order Date</label>
+              <input
+                type="text"
+                name="orderDate"
+                className="input-field"
+                value={orderDate}
+                readOnly
+              />
+            </div>
+          </>
+        ) : (
+          <p>Loading user information...</p>
+        )}
+      </div>
+
+      <hr />
+
+      <div className="order-details">
+        <div className="checkout-form-group">
+          <label>Keyboard Kit Name</label>
+          <p>{orderData?.keyboardKitName}</p>
+        </div>
+
+        <div className="checkout-form-group">
+          <label>Switches</label>
+          <p>{orderData?.switchesName}</p>
+        </div>
+
+        <div className="checkout-form-group">
+          <label>Layout</label>
+          <p>{orderData?.layout}</p>
+        </div>
+
+        <div className="checkout-form-group">
+          <label>With Switches</label>
+          <p>{orderData?.withSwitches}</p>
+        </div>
+
+        <div className="checkout-form-group">
+          <label>Stabilizer Name</label>
+          <p>{orderData?.stabilizerName}</p>
+        </div>
+
+        <div className="checkout-form-group">
+          <label>Switch Quantity</label>
+          <p>{orderData?.switchQuantity}</p>
+        </div>
+
+        <div className="checkout-form-group">
+          <label>Plate Choice</label>
+          <p>{orderData?.plateChoice}</p>
+        </div>
+
+        <div className="checkout-form-group">
+          <label>Desoldering</label>
+          <p>{orderData?.desoldering}</p>
+        </div>
+
+        <div className="checkout-form-group">
+          <label>Are You Providing Keycap?</label>
+          <p>{orderData?.providingKeycap}</p>
+        </div>
+
+        <div className="checkout-form-group">
+          <label>Assembly</label>
+          <p>{orderData?.assembly}</p>
+        </div>
+
+        <div className="checkout-form-group">
+          <label>Additional Notes</label>
+          <p>{orderData?.additionalNotes}</p>
+        </div>
+      </div>
+
+      <hr />
+
+      {/* Total Section */}
+      <div className="checkout-total-section">
+        <h2>TOTAL</h2>
+        <p>{orderData?.total.toLocaleString()} VND</p>
+      </div>
+
+      {/* Buttons */}
+      <div className="checkout-button-group">
+        <button
+          type="button"
+          className="return-button"
+          onClick={() => navigate("/service/keyboard-building")}
+        >
+          Return
+        </button>
+        <button
+          type="button"
+          className="proceed-button"
+          onClick={handleProceed}
+        >
+          Proceed
+        </button>
+      </div>
+
+      {/* QR Code Popup */}
+      {showQRCodePopup && (
+        <div className="qr-popup">
+          <div className="qr-popup-content">
+            <img
+              src={qr}
+              alt="QR Code"
+              style={{ width: "256px", height: "256px" }}
+            />
+            <button
+              type="button"
+              className="close-qr-popup"
+              onClick={handleCloseQRCodePopup}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default CheckoutBuild;

@@ -1,0 +1,35 @@
+node_modules
+
+# build/cache
+/dist/
+/.direnv/
+/coverage/
+*.log
+.DS_Store
+
+# deploy secrets / local ansible inventory
+/deploy/.env
+/deploy/ansible/inventory.ini
+
+# local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.local
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# LaTeX auxiliary/build files
+*.aux
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.toc
+*.out
+*.log
+#local doc
+doc/CV/
+doc/learning/
