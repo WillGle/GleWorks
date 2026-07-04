@@ -5,10 +5,26 @@ body, html {
     width: 100%;
 }
 
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
 body {
     min-height: 100vh; /* Full viewport height */
     margin: 0;
     background-color: #f5f5f7;
+}
+
+.app-shell {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-route {
+    flex: 1 0 auto;
 }
 
 /* Shown briefly while a lazily-loaded route chunk is being fetched. */

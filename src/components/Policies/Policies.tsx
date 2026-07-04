@@ -8,7 +8,7 @@ import PrivacyPolicy from "./PrivacyPolicy";
 import ReturnPolicy from "./ReturnPolicy";
 
 const SECTIONS = [
-  { id: "term-of-service", label: "Term of Service" },
+  { id: "term-of-service", label: "Terms of Service" },
   { id: "privacy-policy", label: "Privacy Policy" },
   { id: "return-policy", label: "Return Policy" },
 ] as const;

@@ -16,21 +16,23 @@ const NotFound = lazy(() => import("./components/NotFound"));
 // Component responsible for rendering the static layout and routes.
 function AppLayout() {
   return (
-    <>
+    <div className="app-shell">
       <Header />
-      {/* Suspense catches lazily-loaded routes while their chunk is fetched */}
-      <Suspense fallback={<div className="route-loading">Loading…</div>}>
-        <Routes>
-          <Route path="/" element={<Navigate to="/home" />} />
-          <Route path="/home" element={<Landing />} />
-          <Route path="/archive" element={<Archive />} />
-          <Route path="/service" element={<ServicePaused />} />
-          <Route path="/policies/" element={<Policies />} />
-          <Route path="*" element={<NotFound />} /> {/* Catch-all route */}
-        </Routes>
-      </Suspense>
+      <div className="app-route">
+        {/* Suspense catches lazily-loaded routes while their chunk is fetched */}
+        <Suspense fallback={<div className="route-loading">Loading…</div>}>
+          <Routes>
+            <Route path="/" element={<Navigate to="/home" />} />
+            <Route path="/home" element={<Landing />} />
+            <Route path="/archive" element={<Archive />} />
+            <Route path="/service" element={<ServicePaused />} />
+            <Route path="/policies/" element={<Policies />} />
+            <Route path="*" element={<NotFound />} /> {/* Catch-all route */}
+          </Routes>
+        </Suspense>
+      </div>
       <Footer />
-    </>
+    </div>
   );
 }
 

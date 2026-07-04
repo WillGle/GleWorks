@@ -38,7 +38,7 @@ const Footer: React.FC = () => {
         <div className="footer-section">
           <ul>
             <li>
-              <a href="/policies#term-of-service">Term of Service</a>
+              <a href="/policies#term-of-service">Terms of Service</a>
             </li>
             <li>
               <a href="/policies#privacy-policy">Privacy Policy</a>

@@ -1,7 +1,7 @@
 /* Landing Page CSS */
 .landing {
     font-family: Arial, sans-serif;
-    padding: 20px;
+    padding: 20px clamp(20px, 4vw, 40px);
     max-width: 1200px;
     margin: 0 auto;
   }
@@ -12,11 +12,12 @@
     justify-content: space-between;
     align-items: center;
     padding: 50px 0;
+    gap: 40px;
   }
 
   .hero-content {
     padding: 40px;
-    width: 60%;
+    flex: 0 1 calc(42% - 20px);
   }
 
   .hero-content h1 {
@@ -47,10 +48,9 @@
   }
 
   .hero-image {
-    width: 60%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex: 0 1 calc(58% - 20px);
+    min-width: 0;
+    max-width: calc(58% - 20px);
     height: auto; /* Maintain the aspect ratio */
 }
 
@@ -68,18 +68,18 @@
     justify-content: space-between;
     align-items: center;
     padding: 50px 0;
+    gap: 40px;
   }
 
   .about-content {
     padding: 30px;
-    width: 60%;
+    flex: 0 1 calc(58% - 20px);
   }
 
   .about-image {
-    width: 40%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex: 0 1 calc(42% - 20px);
+    min-width: 0;
+    max-width: calc(42% - 20px);
     height: auto; /* Maintain the aspect ratio */
 }
 
@@ -118,29 +118,35 @@
   }
 
   /* Responsive Styles */
-  @media (max-width: 768px) {
+  @media (max-width: 640px) {
     .hero-section {
       flex-direction: column;
       text-align: center;
+      gap: 24px;
     }
 
     .hero-content,
     .hero-image {
+      flex-basis: auto;
+      max-width: 100%;
       width: 100%;
     }
 
     .about-section {
       flex-direction: column;
       text-align: center;
+      gap: 24px;
     }
 
     .about-content,
     .about-image {
+      flex-basis: auto;
+      max-width: 100%;
       width: 100%;
     }
   }
 
-  @media (max-width: 480px) {
+  @media (max-width: 640px) {
     .hero-content h1 {
       font-size: 28px;
     }

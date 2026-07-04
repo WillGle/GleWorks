@@ -6,17 +6,28 @@ const ReturnPolicy: React.FC = () => {
     <section id="return-policy" className="policy-section">
       <h1>Return Policy</h1>
       <p>
-        This site does not currently accept orders or checkout submissions.
-        Historical commission work is shown for archive and portfolio purposes.
+        GLEWORKS does not currently accept public orders, checkout submissions,
+        product purchases, or service bookings through this website. Historical
+        keyboard work is shown for archive and portfolio purposes only.
       </p>
       <h3>Current Status</h3>
       <p>
-        Because commissions are paused, there is no active return flow through
-        this website.
+        Commissions and service requests are temporarily closed while the site
+        and service pages are updated. There is no active return, exchange,
+        refund, or cancellation flow through this website.
       </p>
-      <h3>Past Work</h3>
+      <h3>Archived Projects</h3>
       <p>
-        For questions about previous work, contact support@gleworks.io.vn.
+        Archive entries, photos, project notes, and past commission references
+        are not current product listings. They do not represent available
+        inventory, active pricing, shipping terms, or a promise to reproduce a
+        previous build.
+      </p>
+      <h3>Previous Work</h3>
+      <p>
+        If you have a question about previous work that involved you directly,
+        contact support@gleworks.io.vn with the relevant context. Any follow-up
+        will be handled case by case outside the public website.
       </p>
     </section>
   );

@@ -18,19 +18,25 @@ test('renders the landing page', () => {
 
 test('renders the not found page for unknown routes', async () => {
   renderAtRoute('/unknown')
-  expect(await screen.findByRole('heading', { name: '404 - Page Not Found' })).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: 'Page not found' })).toBeInTheDocument()
+  expect(
+    screen.getByText(/We couldn't find the page you were looking for/i)
+  ).toBeInTheDocument()
+  const links = screen.getAllByRole('link', { name: 'clicking here' })
+  expect(links[0]).toHaveAttribute('href', '/home')
+  expect(links[1]).toHaveAttribute('href', '/archive')
 })
 
-test('renders the paused service page', async () => {
+test('renders the temporarily closed service page', async () => {
   renderAtRoute('/service')
-  expect(await screen.findByRole('heading', { name: 'Commissions are paused' })).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: 'Commissions are temporarily closed' })).toBeInTheDocument()
   expect(screen.queryByText(/Keyboard Build Service/i)).not.toBeInTheDocument()
 })
 
 test('renders the policies page with anchor navigation', async () => {
   renderAtRoute('/policies')
 
-  expect(await screen.findByRole('heading', { name: 'Term of Service' })).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: 'Terms of Service' })).toBeInTheDocument()
   expect(screen.getByRole('heading', { name: 'Privacy Policy' })).toBeInTheDocument()
   expect(screen.getByRole('heading', { name: 'Return Policy' })).toBeInTheDocument()
 
